@@ -1,0 +1,5 @@
+syntax: glob
+*.build*
+spriterExample.data/example hero/.DS_Store
+spriterExample.data/monster/.dropbox.attr
+spriterExample.data/monster/desktop.ini
