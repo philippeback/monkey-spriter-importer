@@ -26,6 +26,9 @@ Class Game Extends App
 	Field lastMillisecs:Int
 	Field currentMillisecs:Int 
 	Field timeElapsed:Int
+	Field frameCounter:Int
+	Field fpsCounter:Int
+	Field frameTimer:Int
 	Field tween:Bool = True
 	Field loopType:Int
 	Field scaleX:Float = 1
@@ -33,13 +36,19 @@ Class Game Extends App
 	Field debug:Bool
 	
 	Method OnCreate:Int()
-		monster = SpriterImporter.ImportFile("monster", "Example.SCML")
+		monster = SpriterImporter.ImportFile("monster", "Example.SCML", "monster\monster.xml")
 		hero = SpriterImporter.ImportFile("example hero", "BetaFormatHero.SCML")
-	
+
 		monster.x = DeviceWidth() / 2
 		monster.y = DeviceHeight() - 20
 		hero.x = DeviceWidth() / 2 - 200
 		hero.y = DeviceHeight() - 20
+
+		For Local i:Int = 0 To 100
+			Local m:Monster = New Monster(Rnd(0, DeviceWidth()), Rnd(0, DeviceHeight()))
+			m.spriter.timer.Start()
+			m.spriter.SetScale(.5, .5)
+		Next
 
 		monster.timer.Start()
 		hero.timer.Start()		
@@ -94,25 +103,41 @@ Class Game Extends App
 	End
 	
 	Method OnUpdate:Int()
-		' simple delta timing
-		currentMillisecs = Millisecs()
-		timeElapsed = currentMillisecs - lastMillisecs 
-		lastMillisecs = currentMillisecs
-
+		CalcFPS()
+		
 		hero.Update(heroAnimName, loopType, timeElapsed)
 		monster.Update(monsterAnimName, loopType, timeElapsed)
+
+		Monster.UpdateAll(timeElapsed)
 
 		Controls()
 		Return 0
 	End	
 	
+	Method CalcFPS:Void()
+		' simple delta timing
+		currentMillisecs = Millisecs()
+		timeElapsed = currentMillisecs - lastMillisecs 
+		lastMillisecs = currentMillisecs
+
+		' simple fps counter
+		If Millisecs() < frameTimer + 1000
+			frameCounter+=1
+		Else
+			fpsCounter = frameCounter
+			frameCounter = 0
+			frameTimer = Millisecs()
+		End
+	End
+	
 	Method OnRender:Int()
 		Cls
 		monster.Draw(tween)
 		hero.Draw(tween)
-
+		Monster.DrawAll()
 		Button.DrawAll()
 		If debug Then DrawDebug()
+		DrawText(fpsCounter, 2, DeviceHeight() - 12)
 		Return 0
 	End
 	
@@ -126,46 +151,75 @@ Class Game Extends App
 			scaleY *= 1.1
 			monster.SetScale(scaleX, scaleY)
 			hero.SetScale(scaleX, scaleY)
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.SetScale(scaleX, scaleY)
+			End
 		End
 		If Button.Clicked("Scale Down") Then
 			scaleX /= 1.1
 			scaleY /= 1.1
 			monster.SetScale(scaleX, scaleY)
 			hero.SetScale(scaleX, scaleY)
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.SetScale(scaleX, scaleY)
+			End
 		End
 		If Button.Clicked("Flip X") Then
 			scaleX = -scaleX
 			monster.SetScale(scaleX, monster.scaleY)
 			hero.SetScale(scaleX, monster.scaleY)
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.SetScale(scaleX, m.spriter.scaleY)
+			End
 		End
+		
 		If Button.Clicked("Flip Y") Then
 			scaleY = -scaleY
 			monster.SetScale(monster.scaleX, scaleY)
 			hero.SetScale(hero.scaleX, scaleY)
 			monster.y = DeviceHeight() - monster.y
 			hero.y = DeviceHeight() - hero.y
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.SetScale(m.spriter.scaleX, scaleY)
+			End
 		End
 		If Button.Clicked("Stop Timer") Then
 			monster.timer.Stop()
 			hero.timer.Stop()
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.timer.Stop()
+			End
 		End
 		If Button.Clicked("Resume Timer") Then
 			monster.timer.Resume()
 			hero.timer.Resume()
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.timer.Resume()
+			End
 		End
 		If Button.Clicked("Reset Timer") Then
 			monster.timer.Start()
 			hero.timer.Start()
 			monster.mainlineKeyId = 0
 			hero.mainlineKeyId = 0
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.timer.Start()
+				m.spriter.mainlineKeyId = 0
+			End
 		End
 		If Button.Clicked("Faster") Then
 			hero.timer.rate/=1.1
 			monster.timer.rate/=1.1
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.timer.rate/=1.1
+			End
 		End
 		If Button.Clicked("Slower") Then
 			hero.timer.rate*=1.1
 			monster.timer.rate*=1.1
+			For Local m:Monster = Eachin Monster.list
+				m.spriter.timer.rate*=1.1
+			End
 		End
 		If Button.Clicked("Anim 1") Then
 			monsterAnimName = IDLE
@@ -240,6 +294,39 @@ Class Game Extends App
 		SetAlpha(1)
 	End
 End
+
+Class Monster
+	Global list:List<Monster> = New List<Monster>
+	Field spriter:MonkeySpriter
+	
+	Method New(x:Float, y:Float)
+		spriter = SpriterImporter.ImportFile("monster", "Example.SCML", "monster\monster.xml")
+		spriter.x = x
+		spriter.y = y
+		Self.list.AddLast(Self)
+	End
+	
+	Method Draw:Void(tween:Bool)
+		spriter.Draw(tween)
+	End
+	
+	Method Update:Void(dt:Float)
+		spriter.Update("Idle", True, dt)
+	End
+	
+	Function UpdateAll:Void(dt:Float)
+		For Local m:Monster = Eachin Monster.list
+			m.Update(dt)
+		Next
+	End
+	
+	Function DrawAll:Void()
+		For Local m:Monster = Eachin Monster.list
+			m.Draw(true)
+		Next
+	End
+End
+
 '-------------------------- Simple Button --------------------------
 Class Button
 	Field x:Int, y:Int
@@ -325,6 +412,7 @@ Class Button
 	End
 End
 
+'-------------------------- Functions --------------------------
 Function RectsOverlap:Int(x0:Float, y0:Float, w0:Float, h0:Float, x2:Float, y2:Float, w2:Float, h2:Float)
 	If x0 > (x2 + w2) Or (x0 + w0) < x2 Then Return False
 	If y0 > (y2 + h2) Or (y0 + h0) < y2 Then Return False

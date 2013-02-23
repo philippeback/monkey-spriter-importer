@@ -356,18 +356,18 @@ Class SpriterBone
 End
 
 Class SpriterImporter
-	Function ImportFile:MonkeySpriter(path:String, file:String, debug:Bool = False)
-		If debug Then Print "Importing " + path + "/" + file
+	Function ImportFile:MonkeySpriter(parent:String, file:String, atlasPath:String = "", debug:Bool = False)
+		If debug Then Print "Importing " + parent + "/" + file
 
-		Local str:String = LoadString(path + "/" + file)
-		If str = "" Then Error "Error loading file..." + path + "/" + file
+		Local str:String = LoadString(parent + "/" + file)
+		If str = "" Then Error "Error loading file..." + parent + "/" + file
 		
 		Local xmlReader:XMLParser = New XMLParser		
 		Local doc:XMLDocument = xmlReader.ParseString(str)
 		Local rootElement:XMLElement = doc.Root
 
 		Local smo:MonkeySpriter = New MonkeySpriter()
-		smo.mainPath = path
+		smo.mainPath = parent
 		For Local folderElement:XMLElement = Eachin rootElement.GetChildrenByName("folder")
 			Local folder:SpriterFolder = New SpriterFolder()
 			folder.id = Int(folderElement.GetAttribute("id"))
@@ -382,7 +382,11 @@ Class SpriterImporter
 				file.height = Int(fileElement.GetAttribute("height"))
 				
 				If debug Print "file = " + file.id + " " + file.name
-				smo.textures.Load(path + "/" + file.name)
+				If atlasPath
+					smo.textures.LoadAtlas(parent, atlasPath)
+				Else
+					smo.textures.Load(parent + "/" + file.name)
+				End
 				
 				folder.files.Add(file.id, file)
 			Next
@@ -502,6 +506,8 @@ Class SpriterImporter
 End
 
 Class TextureProvider Extends StringMap<Image>
+	Field path:String = "graphics/"
+	
 	Method Load:Image(name:String)
 		Local storeKey:String = name.ToUpper()
 
@@ -515,6 +521,32 @@ Class TextureProvider Extends StringMap<Image>
 		'Print "storing "+storeKey
 		Self.Set(storeKey, i)
 		Return i
+	End
+	
+	Method LoadAtlas:Void(parent:String, fileName:String)
+		Local str:String = LoadString(fileName)
+		If str = "" Then Error "Error loading atlas..." + fileName
+
+		' parse the xml
+		Local parser:XMLParser = New XMLParser
+		Local doc:XMLDocument = parser.ParseString(str)
+		Local rootElement:XMLElement = doc.Root
+		Local spriteFileName:String = rootElement.GetAttribute("imagePath")
+		
+		Local pointer:Image = LoadImage(path + spriteFileName)
+		If Not pointer Then Error "Error loading bitmap atlas "+ path + spriteFileName
+		
+		For Local node:XMLElement = Eachin rootElement.GetChildrenByName("SubTexture")
+			Local x:Int = Int(node.GetAttribute("x").Trim())
+			Local y:Int = Int(node.GetAttribute("y").Trim())
+			Local width:Int = Int(node.GetAttribute("width").Trim())
+			Local height:Int = Int(node.GetAttribute("height").Trim())
+			Local name:String = node.GetAttribute("name").Trim()
+
+			Local i:Image = New Image
+			i = pointer.GrabImage(x, y, width, height)
+			Self.Set(parent.ToUpper() + "/" + name.ToUpper() + ".PNG", i)
+		Next
 	End
 	
 	Method DisplayAllStored:Void()

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:6530f0775c39afcf7a22c327e6bea36a$ -->
+<TextureAtlas imagePath="monster.png">
+    <SubTexture name="mon_arms/forearm_0" x="417" y="354" width="84" height="108"/>
+    <SubTexture name="mon_arms/forearm_a" x="220" y="734" width="99" height="78"/>
+    <SubTexture name="mon_arms/hand_0_0" x="2" y="657" width="110" height="117"/>
+    <SubTexture name="mon_arms/hand_0_1" x="114" y="597" width="110" height="117"/>
+    <SubTexture name="mon_arms/hand_0_2" x="2" y="538" width="110" height="117"/>
+    <SubTexture name="mon_arms/hand_0_3" x="138" y="478" width="110" height="117"/>
+    <SubTexture name="mon_arms/hand_a_0" x="405" y="622" width="104" height="113"/>
+    <SubTexture name="mon_arms/hand_a_1" x="2" y="776" width="104" height="113"/>
+    <SubTexture name="mon_arms/hand_a_2" x="114" y="716" width="104" height="113"/>
+    <SubTexture name="mon_arms/hand_a_3" x="226" y="619" width="104" height="113"/>
+    <SubTexture name="mon_arms/shoulder_0" x="138" y="382" width="114" height="94"/>
+    <SubTexture name="mon_arms/shoulder_a" x="332" y="619" width="71" height="115"/>
+    <SubTexture name="mon_head/head_0" x="2" y="221" width="144" height="151"/>
+    <SubTexture name="mon_head/head_1" x="294" y="201" width="144" height="151"/>
+    <SubTexture name="mon_head/head_2" x="148" y="68" width="144" height="151"/>
+    <SubTexture name="mon_head/head_3" x="2" y="68" width="144" height="151"/>
+    <SubTexture name="mon_legs/foot_0" x="148" y="221" width="139" height="159"/>
+    <SubTexture name="mon_legs/foot_a" x="2" y="374" width="134" height="162"/>
+    <SubTexture name="mon_legs/pelvis_0" x="254" y="468" width="110" height="149"/>
+    <SubTexture name="mon_legs/thigh_0" x="417" y="464" width="81" height="156"/>
+    <SubTexture name="mon_legs/thigh_a" x="289" y="354" width="126" height="112"/>
+    <SubTexture name="mon_shadows/shadow_idle" x="2" y="2" width="321" height="64"/>
+    <SubTexture name="mon_torso/torso_0" x="325" y="2" width="180" height="197"/>
+</TextureAtlas>
