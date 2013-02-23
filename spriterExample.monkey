@@ -44,12 +44,6 @@ Class Game Extends App
 		hero.x = DeviceWidth() / 2 - 200
 		hero.y = DeviceHeight() - 20
 
-		For Local i:Int = 0 To 100
-			Local m:Monster = New Monster(Rnd(0, DeviceWidth()), Rnd(0, DeviceHeight()))
-			m.spriter.timer.Start()
-			m.spriter.SetScale(.5, .5)
-		Next
-
 		monster.timer.Start()
 		hero.timer.Start()		
 		SetUpdateRate(60)
@@ -99,7 +93,13 @@ Class Game Extends App
 		b.SetColour(125, 0, 125)
 		
 		b = New Button("Debug On/Off", 220, 40, 100, 20)
-		b.SetColour(125, 230, 234)	
+		b.SetColour(125, 230, 234)
+		
+		b = New Button("Benchmark", 220, 70, 100, 20)
+		b.SetColour(240, 230, 234)
+			
+		b = New Button("Clear BM", 330, 70, 100, 20)
+		b.SetColour(240, 23, 234)	
 	End
 	
 	Method OnUpdate:Int()
@@ -133,8 +133,8 @@ Class Game Extends App
 	Method OnRender:Int()
 		Cls
 		monster.Draw(tween)
+		Monster.DrawAll(tween)
 		hero.Draw(tween)
-		Monster.DrawAll()
 		Button.DrawAll()
 		If debug Then DrawDebug()
 		DrawText(fpsCounter, 2, DeviceHeight() - 12)
@@ -228,6 +228,9 @@ Class Game Extends App
 			monster.timer.Start()
 			hero.mainlineKeyId = 0
 			hero.timer.Start()
+			For Local m:Monster = Eachin Monster.list
+				m.animationName = IDLE
+			End
 		End
 		If Button.Clicked("Anim 2") Then
 			monsterAnimName = POSTURE
@@ -236,6 +239,9 @@ Class Game Extends App
 			monster.timer.Start()
 			hero.mainlineKeyId = 0
 			hero.timer.Start()
+			For Local m:Monster = Eachin Monster.list
+				m.animationName = POSTURE
+			End
 		End
 		If Button.Clicked("Tween On/Off") Then
 			tween = Not tween
@@ -247,8 +253,26 @@ Class Game Extends App
 			hero.mainlineKeyId = 0
 			loopType += 1
 			If loopType > 2 loopType = 0
+			For Local m:Monster = Eachin Monster.list
+				m.loopType = loopType
+				m.spriter.timer.Start()
+				m.spriter.mainlineKeyId = 0
+			End
 		End
 		
+		If Button.Clicked("Benchmark") Then	
+			For Local i:Int = 0 To 100
+				Local m:Monster = New Monster()
+				m.spriter = monster.Copy()
+				m.spriter.x = Rnd(0, DeviceWidth())
+				m.spriter.y = Rnd(0, DeviceHeight())
+				m.spriter.timer.Start()
+				m.spriter.SetScale(.5, .5)
+			Next
+		End
+		If Button.Clicked("Clear BM") Then
+			Monster.list.Clear()
+		End
 		If KeyDown(KEY_W) hero.y-=2
 		If KeyDown(KEY_S) hero.y+=2
 		If KeyDown(KEY_A) hero.x-=2
@@ -298,11 +322,11 @@ End
 Class Monster
 	Global list:List<Monster> = New List<Monster>
 	Field spriter:MonkeySpriter
+	Field animationName:String
+	Field loopType:Int = MonkeySpriter.LOOPING_TRUE
 	
-	Method New(x:Float, y:Float)
-		spriter = SpriterImporter.ImportFile("monster", "Example.SCML", "monster\monster.xml")
-		spriter.x = x
-		spriter.y = y
+	Method New()
+		animationName = "Idle"
 		Self.list.AddLast(Self)
 	End
 	
@@ -311,7 +335,7 @@ Class Monster
 	End
 	
 	Method Update:Void(dt:Float)
-		spriter.Update("Idle", True, dt)
+		spriter.Update(animationName, loopType, dt)
 	End
 	
 	Function UpdateAll:Void(dt:Float)
@@ -320,9 +344,9 @@ Class Monster
 		Next
 	End
 	
-	Function DrawAll:Void()
+	Function DrawAll:Void(tween:Bool)
 		For Local m:Monster = Eachin Monster.list
-			m.Draw(true)
+			m.Draw(tween)
 		Next
 	End
 End
