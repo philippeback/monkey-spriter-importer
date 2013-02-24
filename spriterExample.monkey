@@ -13,6 +13,7 @@ Class Game Extends App
 	
 	Field monster:MonkeySpriter
 	Field hero:MonkeySpriter
+	Field bones:MonkeySpriter
 	
 	Const IDLE:String = "Idle"
 	Const POSTURE:String = "Posture"
@@ -21,6 +22,11 @@ Class Game Extends App
 	Const IDLEH:String = "idle_healthy"
 	Const WALK:String = "walk"
 	Field heroAnimName:String = IDLEH
+	
+	Const IDLEB:String = "Player_Idle"
+	Const WALKB:String = "Player_Walk"
+	Field boneAnimName:String = IDLEB
+	
 	Field flipX:Bool
 	Field flipY:Bool
 	Field lastMillisecs:Int
@@ -38,12 +44,16 @@ Class Game Extends App
 	Method OnCreate:Int()
 		monster = SpriterImporter.ImportFile("monster", "Example.SCML", "monster\monster.xml")
 		hero = SpriterImporter.ImportFile("example hero", "BetaFormatHero.SCML")
-
+		bones = SpriterImporter.ImportFile("BoneExample", "Basic_Platformer.scml")
+		
 		monster.x = DeviceWidth() / 2
 		monster.y = DeviceHeight() - 20
 		hero.x = DeviceWidth() / 2 - 200
 		hero.y = DeviceHeight() - 20
-
+		bones.x = DeviceWidth() / 2 + 200
+		bones.y = DeviceHeight() - 20
+		
+		bones.timer.Start()
 		monster.timer.Start()
 		hero.timer.Start()		
 		SetUpdateRate(60)
@@ -51,6 +61,7 @@ Class Game Extends App
 		loopType = MonkeySpriter.LOOPING_TRUE
 		debug = false
 		CreateGUI()
+		Seed = Millisecs()
 		Return 0
 	End
 	
@@ -107,7 +118,7 @@ Class Game Extends App
 		
 		hero.Update(heroAnimName, loopType, timeElapsed)
 		monster.Update(monsterAnimName, loopType, timeElapsed)
-
+		bones.Update(boneAnimName, loopType, timeElapsed)
 		Monster.UpdateAll(timeElapsed)
 
 		Controls()
@@ -134,10 +145,11 @@ Class Game Extends App
 		Cls
 		monster.Draw(tween)
 		Monster.DrawAll(tween)
+		bones.Draw(tween)
 		hero.Draw(tween)
 		Button.DrawAll()
 		If debug Then DrawDebug()
-		DrawText(fpsCounter, 2, DeviceHeight() - 12)
+		DrawText("FPS: " + fpsCounter + " with " + (3 + Monster.list.Count()) + " objects", 2, DeviceHeight() - 12)
 		Return 0
 	End
 	
@@ -154,6 +166,7 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.SetScale(scaleX, scaleY)
 			End
+			bones.SetScale(scaleX, scaleY)
 		End
 		If Button.Clicked("Scale Down") Then
 			scaleX /= 1.1
@@ -163,6 +176,7 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.SetScale(scaleX, scaleY)
 			End
+			bones.SetScale(scaleX, scaleY)
 		End
 		If Button.Clicked("Flip X") Then
 			scaleX = -scaleX
@@ -171,6 +185,7 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.SetScale(scaleX, m.spriter.scaleY)
 			End
+			bones.SetScale(scaleX, bones.scaleY)
 		End
 		
 		If Button.Clicked("Flip Y") Then
@@ -182,10 +197,13 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.SetScale(m.spriter.scaleX, scaleY)
 			End
+			bones.SetScale(bones.scaleX, scaleY)
+			bones.y = DeviceHeight() - bones.y
 		End
 		If Button.Clicked("Stop Timer") Then
 			monster.timer.Stop()
 			hero.timer.Stop()
+			bones.timer.Stop()
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.timer.Stop()
 			End
@@ -193,6 +211,7 @@ Class Game Extends App
 		If Button.Clicked("Resume Timer") Then
 			monster.timer.Resume()
 			hero.timer.Resume()
+			bones.timer.Resume()
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.timer.Resume()
 			End
@@ -200,8 +219,10 @@ Class Game Extends App
 		If Button.Clicked("Reset Timer") Then
 			monster.timer.Start()
 			hero.timer.Start()
+			bones.timer.Start()
 			monster.mainlineKeyId = 0
 			hero.mainlineKeyId = 0
+			bones.mainlineKeyId = 0
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.timer.Start()
 				m.spriter.mainlineKeyId = 0
@@ -213,6 +234,7 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.timer.rate/=1.1
 			End
+			bones.timer.rate/=1.1
 		End
 		If Button.Clicked("Slower") Then
 			hero.timer.rate*=1.1
@@ -220,6 +242,7 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.timer.rate*=1.1
 			End
+			bones.timer.rate*=1.1
 		End
 		If Button.Clicked("Anim 1") Then
 			monsterAnimName = IDLE
@@ -231,6 +254,9 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.animationName = IDLE
 			End
+			boneAnimName = IDLEB
+			bones.mainlineKeyId = 0
+			bones.timer.Start()			
 		End
 		If Button.Clicked("Anim 2") Then
 			monsterAnimName = POSTURE
@@ -242,6 +268,9 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.animationName = POSTURE
 			End
+			boneAnimName = WALKB
+			bones.mainlineKeyId = 0
+			bones.timer.Start()
 		End
 		If Button.Clicked("Tween On/Off") Then
 			tween = Not tween
@@ -249,8 +278,10 @@ Class Game Extends App
 		If Button.Clicked("Loop Type") Then
 			monster.timer.Start()
 			hero.timer.Start()
+			bones.timer.Start()
 			monster.mainlineKeyId = 0
 			hero.mainlineKeyId = 0
+			bones.mainlineKeyId = 0
 			loopType += 1
 			If loopType > 2 loopType = 0
 			For Local m:Monster = Eachin Monster.list
@@ -261,6 +292,7 @@ Class Game Extends App
 		End
 		
 		If Button.Clicked("Benchmark") Then	
+			Seed = Millisecs()
 			For Local i:Int = 0 To 100
 				Local m:Monster = New Monster()
 				m.spriter = monster.Copy()

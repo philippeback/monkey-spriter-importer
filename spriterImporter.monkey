@@ -83,7 +83,73 @@ Class MonkeySpriter
 		Local time:Float = timer.GetTime()
 		mainlineKeyId = mainline.GetKeyViaTime(time).id
 		Local mainlineKey:SpriterKey = mainline.keys.Get(mainlineKeyId)
+		
+		Local boneMap:IntMap<SpriterBone> = New IntMap<SpriterBone>
+		For Local i:Int = Eachin mainlineKey.boneRefs.Keys()
+			Local boneRef:SpriterBoneRef = mainlineKey.boneRefs.Get(i)
+			Local timeline:SpriterTimeline = anim.timelines.Get(boneRef.timeline)
+			Local timelineKey:SpriterKey = timeline.GetKeyViaTime(time)
+			Local nextTimelineKey:SpriterKey = timeline.keys.Get(boneRef.key + 1)
+			Local nextKeyTime:Int
+			Local parent:Int = boneRef.parent
+			
+			If nextTimelineKey = Null Then
+				If anim.looping = LOOPING_TRUE
+					nextTimelineKey = timeline.keys.Get(0)
+					nextKeyTime = anim.length
+					' next timeline might not start at the beginning of the animation
+					If nextTimelineKey.time > 0 Then
+						nextKeyTime += nextTimelineKey.time
+					End
+				Else If anim.looping = LOOPING_PING_PONG
+					If timer.direction = timer.UP
+						nextKeyTime = anim.length
+					Else
+						nextKeyTime = 0
+					End
+					nextTimelineKey = timelineKey
+				Else If anim.looping = LOOPING_FALSE
+					nextTimelineKey = timelineKey
+					nextKeyTime = anim.length	
+				End
+			Else
+				nextKeyTime = nextTimelineKey.time
+			End
+			Local o:SpriterBone = timelineKey.bones.Last()
+			Local nextO:SpriterBone = nextTimelineKey.bones.Last()
 
+			Local tweenedX:Float = LinearInterpolation(o.x, nextO.x, timelineKey.time, nextKeyTime, time)
+			Local tweenedY:Float = LinearInterpolation(o.y, nextO.y, timelineKey.time, nextKeyTime, time)
+			Local tweenedAngle:Float = AngleLinearInterpolation(o.angle, nextO.angle, timelineKey.time, nextKeyTime, time)
+			Local tweenedScaleX:Float = LinearInterpolation(o.scaleX, nextO.scaleX, timelineKey.time, nextKeyTime, time)
+			Local tweenedScaleY:Float = LinearInterpolation(o.scaleY, nextO.scaleY, timelineKey.time, nextKeyTime, time)
+			
+			Local b:SpriterBone = New SpriterBone
+			b.x = tweenedX
+			b.y = tweenedY
+			b.angle = tweenedAngle
+			b.scaleX = tweenedScaleX
+			b.scaleY = tweenedScaleY
+			boneMap.Add(i, b)
+			If parent > -1
+				Local parentBone:SpriterBone = boneMap.Get(parent)
+				b.scaleX *= parentBone.scaleX
+				b.scaleY *= parentBone.scaleY
+				b.angle += parentBone.angle
+				Local x:Float = b.x * parentBone.scaleX
+				Local y:Float = b.y * parentBone.scaleY
+				Local angle:Float = parentBone.angle
+				Local s:Float = Sin(angle)
+				Local c:Float = Cos(angle)
+				Local newX:Float = (x * c) - (y * s)
+				Local newY:Float = (x * s) - (y * c)				
+				b.x = newX + parentBone.x
+				b.y = newY + parentBone.y
+			Else
+			'TODO
+			End
+		Next
+		
 		For Local i:Int = Eachin mainlineKey.objectRefs.Keys()
 			Local objRef:SpriterObjectRef = mainlineKey.objectRefs.Get(i)
 			Local timeline:SpriterTimeline = anim.timelines.Get(objRef.timeline)
@@ -135,10 +201,10 @@ Class MonkeySpriter
 				End
 				
 				If tween
-					Local x1# = o.x
-					Local x2# = nextO.x
-					Local y1# = o.y
-					Local y2# = nextO.y
+					Local x1:Float = o.x
+					Local x2:Float = nextO.x
+					Local y1:Float = o.y
+					Local y2:Float = nextO.y
 					
 					Local tweenedPivotX:Float = LinearInterpolation(o.pivotX, nextO.pivotX, timelineKey.time, nextKeyTime, time)
 					Local tweenedPivotY:Float = LinearInterpolation(o.pivotY, nextO.pivotY, timelineKey.time, nextKeyTime, time)
@@ -150,10 +216,35 @@ Class MonkeySpriter
 					Local tweenedScaleY:Float = LinearInterpolation(o.scaleY, nextO.scaleY, timelineKey.time, nextKeyTime, time)
 					Local tweenedAlpha:Float = LinearInterpolation(o.alpha, nextO.alpha, timelineKey.time, nextKeyTime, time)
 
+					Local b:SpriterObject = New SpriterObject
+					b.x = tweenedX
+					b.y = tweenedY
+					b.angle = tweenedAngle
+					b.scaleX = tweenedScaleX
+					b.scaleY = tweenedScaleY
+
+					If objRef.parent > -1
+						Local parentBone:SpriterBone = boneMap.Get(objRef.parent)
+						b.scaleX *= parentBone.scaleX
+						b.scaleY *= parentBone.scaleY
+						b.angle += parentBone.angle
+						Local x:Float = b.x * parentBone.scaleX
+						Local y:Float = b.y * parentBone.scaleY
+						Local angle:Float = parentBone.angle
+						Local s:Float = Sin(angle)
+						Local c:Float = Cos(angle)
+						Local newX:Float = (x * c) - (y * s)
+						Local newY:Float = (x * s) - (y * c)				
+						b.x = newX + parentBone.x
+						b.y = newY + parentBone.y	
+					Else
+					'TODO???
+					End
+
 					texture.SetHandle(tweenedPivotX * texture.Width(),  nextTexture.Height() + (-tweenedPivotY * nextTexture.Height()))
-					
 					SetAlpha(tweenedAlpha)
-					DrawImage(texture, tweenedX * scaleX + x, -tweenedY * scaleY + y, tweenedAngle, tweenedScaleX * scaleX, tweenedScaleY * scaleY, 0)
+'					DrawImage(texture, tweenedX * scaleX + x, -tweenedY * scaleY + y, tweenedAngle, tweenedScaleX * scaleX, tweenedScaleY * scaleY, 0)
+					DrawImage(texture, b.x * scaleX + x, -b.y * scaleY + y, b.angle, b.scaleX * scaleX, b.scaleY * scaleY, 0)
 				Else
 					texture.SetHandle(o.pivotX * texture.Width(),  nextTexture.Height() + (-o.pivotY * nextTexture.Height()))
 					SetAlpha(o.alpha)
