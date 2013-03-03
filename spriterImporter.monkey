@@ -18,6 +18,9 @@ Class MonkeySpriter
 	Const LOOPING_FALSE:Int = 0
 	Const LOOPING_TRUE:Int = 1
 	Const LOOPING_PING_PONG:Int = 2
+	Field flipX:Int = 1
+	Field flipY:Int = 1
+	Field angle:Float = 0
 	
 	Method New()
 		Self.folders = New IntMap<SpriterFolder>
@@ -75,7 +78,7 @@ Class MonkeySpriter
 		End		
 	End
 	
-	Method Draw:Void(tween:Bool = False)
+	Method Draw:Void(tween:Bool = False, drawBones:Bool = False)
 		Local anim:SpriterAnimation = entities.Get(0).animations.Get(animationName)
 		If anim = Null Return
 		Local mainline:SpriterMainline = anim.mainline
@@ -118,6 +121,7 @@ Class MonkeySpriter
 			Local o:SpriterBone = timelineKey.bones.Last()
 			Local nextO:SpriterBone = nextTimelineKey.bones.Last()
 
+
 			Local tweenedX:Float = LinearInterpolation(o.x, nextO.x, timelineKey.time, nextKeyTime, time)
 			Local tweenedY:Float = LinearInterpolation(o.y, nextO.y, timelineKey.time, nextKeyTime, time)
 			Local tweenedAngle:Float = AngleLinearInterpolation(o.angle, nextO.angle, timelineKey.time, nextKeyTime, time)
@@ -146,7 +150,11 @@ Class MonkeySpriter
 				b.x = newX + parentBone.x
 				b.y = newY + parentBone.y
 			Else
-			'TODO
+				b.x *= flipX * scaleX
+				b.y *= flipY * scaleY				
+				b.scaleX = b.scaleX * flipX * scaleX
+				b.scaleY = b.scaleY * flipY * scaleY
+				If flipX * flipY < 0 Then b.angle = b.angle + 180
 			End
 		Next
 		
@@ -244,6 +252,7 @@ Class MonkeySpriter
 					texture.SetHandle(tweenedPivotX * texture.Width(),  nextTexture.Height() + (-tweenedPivotY * nextTexture.Height()))
 					SetAlpha(tweenedAlpha)
 '					DrawImage(texture, tweenedX * scaleX + x, -tweenedY * scaleY + y, tweenedAngle, tweenedScaleX * scaleX, tweenedScaleY * scaleY, 0)
+
 					DrawImage(texture, b.x * scaleX + x, -b.y * scaleY + y, b.angle, b.scaleX * scaleX, b.scaleY * scaleY, 0)
 				Else
 					texture.SetHandle(o.pivotX * texture.Width(),  nextTexture.Height() + (-o.pivotY * nextTexture.Height()))
@@ -252,6 +261,31 @@ Class MonkeySpriter
 				End
 			Next		
 			SetAlpha(1)
+			If drawBones
+				Local r%=255, g%,bb%
+				For Local i:Int = Eachin boneMap.Keys()
+					Local b:SpriterBone = boneMap.Get(i)
+					Local sx:Float = b.x + x
+					Local sy:Float = -b.y + y
+					Local ex:Float = (b.x + Cos(b.angle) * 40) + x
+					Local ey:Float = (-b.y - Sin(b.angle) * 40) + y
+	
+					SetColor r, g, bb
+					DrawLine sx, sy, ex, ey
+					If i = 0 Then DrawOval b.x + x - 4, -b.y + y - 4, 8, 8
+					
+					DrawOval b.x + x - 2, -b.y + y - 2 , 4, 4
+					r -= 40
+					g += 10
+					bb += 30
+				Next
+				SetColor 100, 100, 100
+				SetAlpha 0.1
+				DrawLine x, 0, x, DeviceHeight()
+				DrawLine 0, y, DeviceWidth(), y
+				SetAlpha 1
+			End
+			SetColor 255, 255, 255
 		Next
 	End
 	
@@ -271,6 +305,15 @@ Class MonkeySpriter
 		Self.scaleX = scaleX
 		Self.scaleY = scaleY
 	End
+	
+	Method FlipX:Void()
+		flipX = -flipX
+	End
+	
+	Method FlipY:Void()
+		flipY = -flipY
+	End
+	
 End
 
 Class SpriterFolder

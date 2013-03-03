@@ -36,6 +36,7 @@ Class Game Extends App
 	Field fpsCounter:Int
 	Field frameTimer:Int
 	Field tween:Bool = True
+	Field drawBones:Bool = True
 	Field loopType:Int
 	Field scaleX:Float = 1
 	Field scaleY:Float = 1
@@ -46,12 +47,12 @@ Class Game Extends App
 		hero = SpriterImporter.ImportFile("example hero", "BetaFormatHero.SCML")
 		bones = SpriterImporter.ImportFile("BoneExample", "Basic_Platformer.scml")
 		
-		monster.x = DeviceWidth() / 2
-		monster.y = DeviceHeight() - 20
-		hero.x = DeviceWidth() / 2 - 200
-		hero.y = DeviceHeight() - 20
+		monster.x = 260
+		monster.y = DeviceHeight() - 30
+		hero.x = 60
+		hero.y = DeviceHeight() - 30
 		bones.x = DeviceWidth() / 2 + 200
-		bones.y = DeviceHeight() - 20
+		bones.y = DeviceHeight() - 30
 		
 		bones.timer.Start()
 		monster.timer.Start()
@@ -111,6 +112,9 @@ Class Game Extends App
 			
 		b = New Button("Clear BM", 330, 70, 100, 20)
 		b.SetColour(240, 23, 234)	
+
+		b = New Button("Draw Bones", 440, 70, 100, 20)
+		b.SetColour(340, 23, 234)
 	End
 	
 	Method OnUpdate:Int()
@@ -145,7 +149,7 @@ Class Game Extends App
 		Cls
 		monster.Draw(tween)
 		Monster.DrawAll(tween)
-		bones.Draw(tween)
+		bones.Draw(tween, drawBones)
 		hero.Draw(tween)
 		Button.DrawAll()
 		If debug Then DrawDebug()
@@ -185,7 +189,7 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.SetScale(scaleX, m.spriter.scaleY)
 			End
-			bones.SetScale(scaleX, bones.scaleY)
+			bones.FlipX()
 		End
 		
 		If Button.Clicked("Flip Y") Then
@@ -197,8 +201,7 @@ Class Game Extends App
 			For Local m:Monster = Eachin Monster.list
 				m.spriter.SetScale(m.spriter.scaleX, scaleY)
 			End
-			bones.SetScale(bones.scaleX, scaleY)
-			bones.y = DeviceHeight() - bones.y
+			bones.FlipY()
 		End
 		If Button.Clicked("Stop Timer") Then
 			monster.timer.Stop()
@@ -274,6 +277,9 @@ Class Game Extends App
 		End
 		If Button.Clicked("Tween On/Off") Then
 			tween = Not tween
+		End
+		If Button.Clicked("Draw Bones") Then
+			drawBones = Not drawBones
 		End
 		If Button.Clicked("Loop Type") Then
 			monster.timer.Start()
