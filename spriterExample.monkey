@@ -43,7 +43,7 @@ Class Game Extends App
 	Field debug:Bool
 	
 	Method OnCreate:Int()
-		monster = SpriterImporter.ImportFile("monster", "Example.SCML", "monster\monster.xml")
+		monster = SpriterImporter.ImportFile("monster", "Example.SCML", "monster/monster.xml")
 		hero = SpriterImporter.ImportFile("example hero", "BetaFormatHero.SCML")
 		bones = SpriterImporter.ImportFile("BoneExample", "Basic_Platformer.scml")
 		
