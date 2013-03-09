@@ -247,15 +247,14 @@ Public
 					SetAlpha(tweenedAlpha)
 					texture.SetHandle(tweenedPivotX * texture.Width(),  nextTexture.Height() + (-tweenedPivotY * nextTexture.Height()))
 
-If flipX And flipY Then
-					DrawImage(texture, -b.x * scaleX + x, b.y * scaleY + y, -b.angle, b.scaleX * -1 * scaleX, b.scaleY * -1 * scaleY, 0)
-Else If flipX Then					
-					DrawImage(texture, -b.x * scaleX + x, -b.y * scaleY + y, -b.angle, b.scaleX * -1 * scaleX, b.scaleY * scaleY, 0)
-Else If flipY Then
-					DrawImage(texture, b.x * scaleX + x, b.y * scaleY + y, -b.angle, b.scaleX * scaleX, b.scaleY * -1 * scaleY, 0)
-Else
-					DrawImage(texture, b.x * scaleX + x, -b.y * scaleY + y, b.angle, b.scaleX * scaleX, b.scaleY * scaleY, 0)
-End
+					Local flipXFactor:Int = 1
+					Local flipYFactor:Int = 1
+
+					If flipX Then flipXFactor = -1
+					If flipY Then flipYFactor = -1
+
+					DrawImage(texture, b.x * flipXFactor * scaleX + x, -b.y * flipYFactor * scaleY + y, b.angle * flipXFactor * flipYFactor, b.scaleX * flipXFactor * scaleX, b.scaleY * flipYFactor * scaleY, 0)
+
 				Else
 					texture.SetHandle(o.pivotX * texture.Width(),  nextTexture.Height() + (-o.pivotY * nextTexture.Height()))
 					SetAlpha(o.alpha)
