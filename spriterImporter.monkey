@@ -4,6 +4,12 @@ Import diddy.xml
 
 '-------------------------- Monkey Spriter Code --------------------------
 Class MonkeySpriter
+
+Private
+	Field scaleX:Float = 1
+	Field scaleY:Float = 1
+	
+Public
 	Field textures:TextureProvider = New TextureProvider()
 	Field folders:IntMap<SpriterFolder>
 	Field entities:IntMap<SpriterEntity>
@@ -12,14 +18,12 @@ Class MonkeySpriter
 	Field nextKeyTime:Int
 	Field mainlineKeyId:Int
 	Field timer:Timer
-	Field scaleX:Float = 1
-	Field scaleY:Float = 1
 	Field x:Float, y:Float
 	Const LOOPING_FALSE:Int = 0
 	Const LOOPING_TRUE:Int = 1
 	Const LOOPING_PING_PONG:Int = 2
-	Field flipX:Int = 1
-	Field flipY:Int = 1
+	Field flipX:Bool = False
+	Field flipY:Bool = False
 	Field angle:Float = 0
 	
 	Method New()
@@ -149,12 +153,6 @@ Class MonkeySpriter
 				Local newY:Float = (x * s) - (y * c)				
 				b.x = newX + parentBone.x
 				b.y = newY + parentBone.y
-			Else
-				b.x *= flipX * scaleX
-				b.y *= flipY * scaleY				
-				b.scaleX = b.scaleX * flipX * scaleX
-				b.scaleY = b.scaleY * flipY * scaleY
-				If flipX * flipY < 0 Then b.angle = b.angle + 180
 			End
 		Next
 		
@@ -245,15 +243,19 @@ Class MonkeySpriter
 						Local newY:Float = (x * s) - (y * c)				
 						b.x = newX + parentBone.x
 						b.y = newY + parentBone.y	
-					Else
-					'TODO???
 					End
-
-					texture.SetHandle(tweenedPivotX * texture.Width(),  nextTexture.Height() + (-tweenedPivotY * nextTexture.Height()))
 					SetAlpha(tweenedAlpha)
-'					DrawImage(texture, tweenedX * scaleX + x, -tweenedY * scaleY + y, tweenedAngle, tweenedScaleX * scaleX, tweenedScaleY * scaleY, 0)
+					texture.SetHandle(tweenedPivotX * texture.Width(),  nextTexture.Height() + (-tweenedPivotY * nextTexture.Height()))
 
+If flipX And flipY Then
+					DrawImage(texture, -b.x * scaleX + x, b.y * scaleY + y, -b.angle, b.scaleX * -1 * scaleX, b.scaleY * -1 * scaleY, 0)
+Else If flipX Then					
+					DrawImage(texture, -b.x * scaleX + x, -b.y * scaleY + y, -b.angle, b.scaleX * -1 * scaleX, b.scaleY * scaleY, 0)
+Else If flipY Then
+					DrawImage(texture, b.x * scaleX + x, b.y * scaleY + y, -b.angle, b.scaleX * scaleX, b.scaleY * -1 * scaleY, 0)
+Else
 					DrawImage(texture, b.x * scaleX + x, -b.y * scaleY + y, b.angle, b.scaleX * scaleX, b.scaleY * scaleY, 0)
+End
 				Else
 					texture.SetHandle(o.pivotX * texture.Width(),  nextTexture.Height() + (-o.pivotY * nextTexture.Height()))
 					SetAlpha(o.alpha)
@@ -302,16 +304,18 @@ Class MonkeySpriter
 	End
 	
 	Method SetScale:Void(scaleX:Float, scaleY:Float)
-		Self.scaleX = scaleX
-		Self.scaleY = scaleY
+		If scaleX < 0 Then flipX = True
+		If scaleY < 0 Then flipY = True		
+		Self.scaleX = Abs(scaleX)
+		Self.scaleY = Abs(scaleY)
 	End
 	
 	Method FlipX:Void()
-		flipX = -flipX
+		flipX = Not flipX
 	End
 	
 	Method FlipY:Void()
-		flipY = -flipY
+		flipY = Not flipY
 	End
 	
 End

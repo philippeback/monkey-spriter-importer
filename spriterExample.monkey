@@ -52,7 +52,7 @@ Class Game Extends App
 		hero.x = 60
 		hero.y = DeviceHeight() - 30
 		bones.x = DeviceWidth() / 2 + 200
-		bones.y = DeviceHeight() - 30
+		bones.y = DeviceHeight() - 130
 		
 		bones.timer.Start()
 		monster.timer.Start()
@@ -183,24 +183,22 @@ Class Game Extends App
 			bones.SetScale(scaleX, scaleY)
 		End
 		If Button.Clicked("Flip X") Then
-			scaleX = -scaleX
-			monster.SetScale(scaleX, monster.scaleY)
-			hero.SetScale(scaleX, monster.scaleY)
 			For Local m:Monster = Eachin Monster.list
-				m.spriter.SetScale(scaleX, m.spriter.scaleY)
+				m.spriter.FlipX()
 			End
+			hero.FlipX()
+			monster.FlipX()
 			bones.FlipX()
 		End
 		
 		If Button.Clicked("Flip Y") Then
-			scaleY = -scaleY
-			monster.SetScale(monster.scaleX, scaleY)
-			hero.SetScale(hero.scaleX, scaleY)
 			monster.y = DeviceHeight() - monster.y
 			hero.y = DeviceHeight() - hero.y
 			For Local m:Monster = Eachin Monster.list
-				m.spriter.SetScale(m.spriter.scaleX, scaleY)
+				m.spriter.FlipY()
 			End
+			hero.FlipY()
+			monster.FlipY()
 			bones.FlipY()
 		End
 		If Button.Clicked("Stop Timer") Then
