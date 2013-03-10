@@ -115,6 +115,12 @@ Class Game Extends App
 
 		b = New Button("Draw Bones", 440, 70, 100, 20)
 		b.SetColour(340, 23, 234)
+		
+		b = New Button("Rotate Left", 0, 100, 100, 20)
+		b.SetColour(140, 233, 124)
+		
+		b = New Button("Rotate Right", 110, 100, 100, 20)
+		b.SetColour(340, 23, 24)
 	End
 	
 	Method OnUpdate:Int()
@@ -308,6 +314,16 @@ Class Game Extends App
 		End
 		If Button.Clicked("Clear BM") Then
 			Monster.list.Clear()
+		End
+		If Button.Clicked("Rotate Left") Then
+			bones.angle+=10
+			hero.angle+=10
+			monster.angle+=10
+		End
+		If Button.Clicked("Rotate Right") Then
+			bones.angle-=10
+			hero.angle-=10
+			monster.angle-=10
 		End
 		If KeyDown(KEY_W) hero.y-=2
 		If KeyDown(KEY_S) hero.y+=2

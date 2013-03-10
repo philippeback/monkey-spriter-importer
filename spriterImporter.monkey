@@ -150,9 +150,11 @@ Public
 				Local s:Float = Sin(angle)
 				Local c:Float = Cos(angle)
 				Local newX:Float = (x * c) - (y * s)
-				Local newY:Float = (x * s) - (y * c)				
+				Local newY:Float = (x * s) + (y * c)				
 				b.x = newX + parentBone.x
 				b.y = newY + parentBone.y
+			Else
+				b.angle += angle
 			End
 		Next
 		
@@ -240,7 +242,7 @@ Public
 						Local s:Float = Sin(angle)
 						Local c:Float = Cos(angle)
 						Local newX:Float = (x * c) - (y * s)
-						Local newY:Float = (x * s) - (y * c)				
+						Local newY:Float = (x * s) + (y * c)				
 						b.x = newX + parentBone.x
 						b.y = newY + parentBone.y	
 					End
