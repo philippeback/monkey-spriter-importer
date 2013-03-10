@@ -439,7 +439,16 @@ Class Button
 			light = 120
 			SetAlpha(1)
 		End
-		SetColor (r + light, g + light, b + light)
+		Local rr:Int = r + light
+		Local gg:Int = g + light
+		Local bb:Int = b + light
+		If rr > 255 Then rr = 255
+		If gg > 255 Then gg = 255
+		If bb > 255 Then bb = 255
+		If rr < 0 Then rr = 0
+		If gg < 0 Then gg = 0
+		If bb < 0 Then bb = 0
+		SetColor (rr, gg, bb)
 		DrawRect (x, y, w, h)
 		SetColor (255, 255, 255)
 		DrawText (label, x + 2, y + 2)
