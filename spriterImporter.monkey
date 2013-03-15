@@ -10,6 +10,10 @@ Private
 	Field scaleY:Float = 1
 	
 Public
+	Const LOOPING_FALSE:Int = 0
+	Const LOOPING_TRUE:Int = 1
+	Const LOOPING_PING_PONG:Int = 2
+	
 	Field textures:TextureProvider = New TextureProvider()
 	Field folders:IntMap<SpriterFolder>
 	Field entities:IntMap<SpriterEntity>
@@ -19,9 +23,6 @@ Public
 	Field mainlineKeyId:Int
 	Field timer:Timer
 	Field x:Float, y:Float
-	Const LOOPING_FALSE:Int = 0
-	Const LOOPING_TRUE:Int = 1
-	Const LOOPING_PING_PONG:Int = 2
 	Field flipX:Bool = False
 	Field flipY:Bool = False
 	Field angle:Float = 0
@@ -61,10 +62,12 @@ Public
 			Catch ex:Throwable
         		Print "Animation is null! Can not find animation " + animationName
 			End
-			
-			If looping <> "" Then
-				animation.looping = looping
+			If looping <> LOOPING_TRUE And looping <> LOOPING_FALSE And looping <> LOOPING_PING_PONG
+				Error "Invalid looping type!"
 			End
+			
+			animation.looping = looping
+
 			Local mainline:SpriterMainline = animation.mainline
 			If timer.GetTime() >= animation.length
 				If animation.looping = LOOPING_TRUE
@@ -117,7 +120,12 @@ Public
 					nextTimelineKey = timelineKey
 				Else If anim.looping = LOOPING_FALSE
 					nextTimelineKey = timelineKey
-					nextKeyTime = anim.length	
+					' increase the animation length by 16 ms if the animation length is the same as the last keyframe
+					If timelineKey.time = anim.length
+						nextKeyTime = anim.length + 16
+					Else
+						nextKeyTime = anim.length
+					End
 				End
 			Else
 				nextKeyTime = nextTimelineKey.time
@@ -182,7 +190,12 @@ Public
 					nextTimelineKey = timelineKey
 				Else If anim.looping = LOOPING_FALSE
 					nextTimelineKey = timelineKey
-					nextKeyTime = anim.length	
+					' increase the animation length by 16 ms if the animation length is the same as the last keyframe
+					If timelineKey.time = anim.length
+						nextKeyTime = anim.length + 16
+					Else
+						nextKeyTime = anim.length
+					End
 				End
 			Else
 				nextKeyTime = nextTimelineKey.time
