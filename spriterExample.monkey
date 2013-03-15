@@ -43,24 +43,32 @@ Class Game Extends App
 	Field debug:Bool
 	
 	Method OnCreate:Int()
+		loopType = MonkeySpriter.LOOPING_TRUE
+
 		monster = SpriterImporter.ImportFile("monster", "Example.SCML", "monster/monster.xml")
 		hero = SpriterImporter.ImportFile("example hero", "BetaFormatHero.SCML")
 		bones = SpriterImporter.ImportFile("BoneExample", "Basic_Platformer.scml")
 		
 		monster.x = 260
 		monster.y = DeviceHeight() - 30
+		monster.SetAnimation(monsterAnimName, loopType)
+		
 		hero.x = 60
 		hero.y = DeviceHeight() - 30
+		hero.SetAnimation(heroAnimName, loopType)
+		
 		bones.x = DeviceWidth() / 2 + 200
 		bones.y = DeviceHeight() - 130
+		bones.SetAnimation(boneAnimName, loopType)
 		
 		bones.timer.Start()
 		monster.timer.Start()
-		hero.timer.Start()		
+		hero.timer.Start()	
+			
 		SetUpdateRate(60)
 		lastMillisecs = Millisecs()
-		loopType = MonkeySpriter.LOOPING_TRUE
-		debug = false
+
+		debug = False
 		CreateGUI()
 		Seed = Millisecs()
 		Return 0
@@ -126,9 +134,9 @@ Class Game Extends App
 	Method OnUpdate:Int()
 		CalcFPS()
 		
-		hero.Update(heroAnimName, loopType, timeElapsed)
-		monster.Update(monsterAnimName, loopType, timeElapsed)
-		bones.Update(boneAnimName, loopType, timeElapsed)
+		hero.Update(timeElapsed)
+		monster.Update(timeElapsed)
+		bones.Update(timeElapsed)
 		Monster.UpdateAll(timeElapsed)
 
 		Controls()
@@ -254,30 +262,39 @@ Class Game Extends App
 		If Button.Clicked("Anim 1") Then
 			monsterAnimName = IDLE
 			heroAnimName = IDLEH
-			monster.mainlineKeyId = 0
+			boneAnimName = IDLEB
+
+			bones.SetAnimation(boneAnimName, loopType)
+			monster.SetAnimation(monsterAnimName, loopType)
+			hero.SetAnimation(heroAnimName, loopType)
+
+			bones.timer.Start()						
 			monster.timer.Start()
-			hero.mainlineKeyId = 0
 			hero.timer.Start()
+
 			For Local m:Monster = Eachin Monster.list
 				m.animationName = IDLE
+				m.spriter.SetAnimation(m.animationName, loopType)
 			End
-			boneAnimName = IDLEB
-			bones.mainlineKeyId = 0
-			bones.timer.Start()			
+			
 		End
 		If Button.Clicked("Anim 2") Then
 			monsterAnimName = POSTURE
 			heroAnimName = WALK
-			monster.mainlineKeyId = 0
+			boneAnimName = WALKB
+			
+			bones.SetAnimation(boneAnimName, loopType)
+			monster.SetAnimation(monsterAnimName, loopType)
+			hero.SetAnimation(heroAnimName, loopType)
+			
+			bones.timer.Start()						
 			monster.timer.Start()
-			hero.mainlineKeyId = 0
 			hero.timer.Start()
+			
 			For Local m:Monster = Eachin Monster.list
 				m.animationName = POSTURE
+				m.spriter.SetAnimation(m.animationName, loopType)
 			End
-			boneAnimName = WALKB
-			bones.mainlineKeyId = 0
-			bones.timer.Start()
 		End
 		If Button.Clicked("Tween On/Off") Then
 			tween = Not tween
@@ -292,13 +309,18 @@ Class Game Extends App
 			monster.mainlineKeyId = 0
 			hero.mainlineKeyId = 0
 			bones.mainlineKeyId = 0
+			
 			loopType += 1
 			If loopType > 2 loopType = 0
 			For Local m:Monster = Eachin Monster.list
 				m.loopType = loopType
+				m.spriter.SetLoop(m.loopType)
 				m.spriter.timer.Start()
 				m.spriter.mainlineKeyId = 0
 			End
+			monster.SetLoop(loopType)
+			hero.SetLoop(loopType)
+			bones.SetLoop(loopType)
 		End
 		
 		If Button.Clicked("Benchmark") Then	
@@ -310,6 +332,7 @@ Class Game Extends App
 				m.spriter.y = Rnd(0, DeviceHeight())
 				m.spriter.timer.Start()
 				m.spriter.SetScale(.5, .5)
+				m.spriter.SetAnimation(m.animationName, m.loopType)
 			Next
 		End
 		If Button.Clicked("Clear BM") Then
@@ -387,7 +410,7 @@ Class Monster
 	End
 	
 	Method Update:Void(dt:Float)
-		spriter.Update(animationName, loopType, dt)
+		spriter.Update(dt)
 	End
 	
 	Function UpdateAll:Void(dt:Float)

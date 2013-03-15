@@ -19,6 +19,7 @@ Public
 	Field entities:IntMap<SpriterEntity>
 	Field mainPath:String
 	Field animationName:String
+	Field currentAnimation:SpriterAnimation
 	Field nextKeyTime:Int
 	Field mainlineKeyId:Int
 	Field timer:Timer
@@ -51,34 +52,54 @@ Public
 		Return ms
 	End Method
 	
-	Method Update:Void(animationName:String, looping:Int = LOOPING_TRUE, timeElapsed:Int)
+	Method GetAnimation:SpriterAnimation(animationName:String)
+		Local animation:SpriterAnimation
+		Try
+			animation = entities.Get(0).animations.Get(animationName)
+			If animation = Null Then Throw New Throwable
+		Catch ex:Throwable
+			Print "Animation is null! Can not find animation " + animationName
+		End
+		Return animation
+	End
+	
+	Method SetLoop:Void(loop:Int)
+		If loop <> LOOPING_TRUE And loop <> LOOPING_FALSE And loop <> LOOPING_PING_PONG
+			Error "Invalid loop type!"
+		End
+		currentAnimation.looping = loop
+	End
+	
+	Method SetAnimation:Void(animationName:String, looping:Int = LOOPING_FALSE, mainlineKeyId:Int = 0)
 		Self.animationName = animationName
+		currentAnimation = GetAnimation(animationName)
+		SetLoop(looping)
+		currentAnimation.finished = False
+		Self.mainlineKeyId = mainlineKeyId
+	End
+	
+	Method Update:Void(timeElapsed:Int)
+		Try
+			If Self.currentAnimation = Null Then Throw New Throwable
+		Catch ex:Throwable
+			Print "Animation is null! Please call SetAnimation!"
+		End
+
 		If Not timer.stopped
 			timer.Update(timeElapsed)
-			Local animation:SpriterAnimation
-			Try
-				animation = entities.Get(0).animations.Get(animationName)
-				If animation = Null Then Throw New Throwable
-			Catch ex:Throwable
-        		Print "Animation is null! Can not find animation " + animationName
-			End
-			If looping <> LOOPING_TRUE And looping <> LOOPING_FALSE And looping <> LOOPING_PING_PONG
-				Error "Invalid looping type!"
-			End
 			
-			animation.looping = looping
-
-			Local mainline:SpriterMainline = animation.mainline
-			If timer.GetTime() >= animation.length
-				If animation.looping = LOOPING_TRUE
+			Local mainline:SpriterMainline = currentAnimation.mainline
+			If timer.GetTime() >= currentAnimation.length
+				If currentAnimation.looping = LOOPING_TRUE
 					timer.Reset()
-				Else If animation.looping = LOOPING_PING_PONG
+				Else If currentAnimation.looping = LOOPING_PING_PONG
 					timer.direction = timer.DOWN
-				Else If animation.looping = LOOPING_FALSE
+				Else If currentAnimation.looping = LOOPING_FALSE
 					timer.Stop()
+					currentAnimation.finished = True
 				End
 			End
-			If animation.looping = LOOPING_PING_PONG And timer.GetTime() <= 0
+			If currentAnimation.looping = LOOPING_PING_PONG And timer.GetTime() <= 0
 				timer.direction = timer.UP
 				timer.Reset()
 			End
@@ -86,7 +107,8 @@ Public
 	End
 	
 	Method Draw:Void(tween:Bool = False, drawBones:Bool = False)
-		Local anim:SpriterAnimation = entities.Get(0).animations.Get(animationName)
+		Local anim:SpriterAnimation = currentAnimation
+
 		If anim = Null Return
 		Local mainline:SpriterMainline = anim.mainline
 		
@@ -369,10 +391,12 @@ Class SpriterAnimation
 	Field mainline:SpriterMainline
 	Field timelines:IntMap<SpriterTimeline>
 	Field maxKey:Int
+	Field finished:Bool
 	
 	Method New()
 		Self.mainline = New SpriterMainline
 		Self.timelines = New IntMap<SpriterTimeline>
+		Self.finished = False
 	End
 End
 
